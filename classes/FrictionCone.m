@@ -11,8 +11,9 @@ classdef FrictionCone
             self.tire = tire;
         end
         
-        function self = calc_cone(aero)
-            % Calculate the cone based on TTC and aero
+        
+        function self = import_cone(cone)
+            self.cone = cone;
         end
     end
 end

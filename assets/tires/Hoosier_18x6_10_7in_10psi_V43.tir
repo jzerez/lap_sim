@@ -1,0 +1,224 @@
+[MDI_HEADER]
+FILE_TYPE                ='tir'
+FILE_VERSION             = 3.0
+FILE_FORMAT              ='ASCII'
+! : TIRE_VERSION :      PAC2002
+! : COMMENT :           Stackpole Engineering Services, Inc.
+! : COMMENT :           Created By : Melissa Patterson
+! : COMMENT :           August 31, 2012
+! : COMMENT :           Customer     : FSAE
+! : COMMENT :           Construction : 18.0x6.0-10
+! : COMMENT :           DOT : XXXXXX
+! : COMMENT :           Position     : All
+! : COMMENT :           Manufacturer : Hoosier
+! : COMMENT :           Nom. section width(in)  8.10
+! : COMMENT :           Nom. aspect ratio        0.667
+! : COMMENT :           Infl. pressure   (Psi)  10.0
+! : COMMENT :           Rim Diameter      (in)  10.0
+! : COMMENT :           Rim Width         (in)   7.0
+! : COMMENT :           Test speed       (mph)  25.0
+! : FILE FORMAT :       ASCII
+!
+! USE_MODE specifies the type of calculation performed:
+!       0: Fz only, no Magic Formula evaluation
+!       1: Fx,My only
+!       2: Fy,Mx,Mz only
+!       3: Fx,Fy,Mx,My,Mz uncombined force/moment calculation
+!       4: Fx,Fy,Mx,My,Mz combined force/moment calculation
+!     +10: including relaxation behavior
+!     *-1: mirroring of tyre characteristics
+!
+!       example: USE_MODE = -12 implies:
+!       -calculation of Fy,Mx,Mz only
+!       -including relaxation effects
+!       -mirrored tyre characteristics
+!
+$----------------------------------------------------------------units
+[UNITS]
+ LENGTH              = 'meter'
+ FORCE               = 'Newton'
+ ANGLE               = 'radians'
+ MASS                = 'kg'
+ TIME                = 'second'
+$-----------------------------------------------------------------model
+[MODEL]
+FITTYP                   = 62                   $Magic Formula Version number
+$PROPERTY_FILE_FORMAT     ='PAC2002'
+USE_MODE                 = 14                   $Tyre use switch (IUSED)
+VXLOW                    = 1
+LONGVL                   = 11.1760              $Measurement speed
+TYRESIDE                 = 'RIGHT'              $Mounted side of tyre at vehicle/test bench
+$------------------------------------------------------------dimensions
+[DIMENSION]
+UNLOADED_RADIUS          = 0.2286               $Free tyre radius
+WIDTH                    = 0.2057               $Nominal section width of the tyre
+ASPECT_RATIO             = 0.6670               $Nominal aspect ratio
+RIM_RADIUS               = 0.1270               $Nominal rim radius
+RIM_WIDTH                = 0.1778               $Rim width
+$----------------------------------------------------------------shape
+[SHAPE]
+{radial width}
+ 1.0    0.0
+ 1.0    0.4
+ 1.0    0.9
+ 0.9    1.0
+$-------------------------------------------------------------parameter
+[VERTICAL]
+VERTICAL_STIFFNESS       =  95439.00            $Tyre vertical stiffness
+VERTICAL_DAMPING         = 47719.5             $Tyre vertical damping
+BREFF                    = 0.2286               $Low load stiffness e.r.r.
+DREFF                    = 0.2186               $Peak value of e.r.r.
+FREFF                    = 0.3000               $High load stiffness e.r.r.
+FNOMIN                   = 669.9015		$Nominal wheel load
+$------------------------------------------------------long_slip_range
+[LONG_SLIP_RANGE]
+KPUMIN                   = -0.5000              $Minimum valid wheel slip
+KPUMAX                   =  0.5000              $Maximum valid wheel slip
+$-----------------------------------------------------slip_angle_range
+[SLIP_ANGLE_RANGE]
+ALPMIN                   = -0.2094              $Minimum valid slip angle
+ALPMAX                   =  0.2094              $Maximum valid slip angle
+$-----------------------------------------------inclination_slip_range
+[INCLINATION_ANGLE_RANGE]
+CAMMIN                   = 0.0000	        $Minimum valid camber angle
+CAMMAX                   =  0.0698	        $Maximum valid camber angle
+$-------------------------------------------------vertical_force_range
+[VERTICAL_FORCE_RANGE]
+FZMIN                    =    222.4             $Minimum allowed wheel load
+FZMAX                    =   1556.8             $Maximum allowed wheel load
+$--------------------------------------------------------------scaling
+[SCALING_COEFFICIENTS]
+ LFZO                    = 1.0                  $Scale factor of nominal (rated) load
+ LCX                     = 1.0                  $Scale factor of Fx shape factor
+ LMUX                    = 1.0                  $Scale factor of Fx peak friction coefficient
+ LEX                     = 1.0                  $Scale factor of Fx curvature factor
+ LKX                     = 1.0                  $Scale factor of Fx slip stiffness
+ LHX                     = 1.0                  $Scale factor of Fx horizontal shift
+ LVX                     = 1.0                  $Scale factor of Fx vertical shift
+ LGAX                    = 1.0                  $Scale factor of camber for Fx
+ LCY                     = 1.0                  $Scale factor of Fy shape factor
+ LMUY                    = 1.0                  $Scale factor of Fy peak friction coefficient
+ LEY                     = 1.0                  $Scale factor of Fy curvature factor
+ LKY                     = 1.0                  $Scale factor of Fy cornering stiffness
+ LHY                     = 1.0                  $Scale factor of Fy horizontal shift
+ LVY                     = 1.0                  $Scale factor of Fy vertical shift
+ LGAY                    = 1.0                  $Scale factor of camber for Fy
+ LTR                     = 1.0                  $Scale factor of peak of pneumatic trail
+ LRES                    = 1.0                  $Scale factor for offset of residual torque
+ LGAZ                    = 1.0                  $Scale factor of camber for Mz
+ LXAL                    = 1.0                  $Scale factor of alpha influence on Fx
+ LYKA                    = 1.0                  $Scale factor of alpha influence on Fx
+ LVYKA                   = 1.0                  $Scale factor of kappa induced Fy
+ LS                      = 1.0                  $Scale factor of moment arm of Fx
+ LSGKP                   = 1.0                  $Scale factor of relaxation length of Fx
+ LSGAL                   = 1.0                  $Scale factor of relaxation length of Fy
+ LGYR                    = 1.0                  $Scale factor of gyroscopic torque
+ LMX                     = 1.0                  $Scale factor of overturning couple
+ LVMX                    = 1.0                  $Scale factor of Mx vertical shift
+ LMY                     = 1.0                  $Scale factor of rolling resistance torque
+$--------------------------------------------------------LONGITUDINAL_FORCE
+[LONGITUDINAL_COEFFICIENTS]
+ PCX1                    =  1.52524360E+00      $Shape factor Cfx for longitudinal force
+ PDX1                    = -3.08011200E+00      $Longitudinal friction Mux at Fznom
+ PDX2                    =  5.52527520E-01      $Variation of friction Mux with load
+ PDX3                    =  1.33546300E+01      $Variation of friction Mux with camber
+ PEX1                    =  1.32339880E+00      $Longitudinal curvature Efx at Fznom
+ PEX2                    =  7.12685190E-17      $Variation of curvature Efx with load
+ PEX3                    = -7.06224320E-16      $Variation of curvature Efx with load squared
+ PEX4                    =  2.47819000E-03      $Factor in curvature Efx while driving
+ PKX1                    =  5.82529920E+01      $Longitudinal slip stiffness Kfx/Fz at Fznom
+ PKX2                    =  1.26809310E+01      $Variation of slip stiffness Kfx/Fz with load
+ PKX3                    = -4.49574630E-01      $Exponent in slip stiffness Kfx/Fz with load
+ PHX1                    =  1.36269740E-02      $Horizontal shift Shx at Fznom
+ PHX2                    =  2.79720150E-02      $Variation of shift Shx with load
+ PVX1                    = -7.34790770E-03      $Vertical shift Svx/Fz at Fznom
+ PVX2                    = -5.31023030E-02      $Variation of shift Svx/Fz with load
+ RBX1                    =  6.79801520E+02      $Slope factor for combined slip Fx reduction
+ RBX2                    = -5.58830400E-01      $Variation of slope Fx reduction with kappa
+ RCX1                    =  1.10540750E+00      $Shape factor for combined slip Fx reduction
+ REX1                    =  1.01344210E+00      $Curvature factor of combined Fx
+ REX2                    =  9.50800070E-02      $Curvature factor of combined Fx with load
+ RHX1                    = -4.87410410E-02      $Shift factor for combined slip Fx reduction
+ PTX1                    =  0.00000000E+00      $Relaxation length SigKap0/Fz at Fznom
+ PTX2                    =  0.00000000E+00      $Variation of SigKap0/Fz with load
+ PTX3                    =  0.00000000E+00      $Variation of SigKap0/Fz with exponent of load
+$--------------------------------------------------------OVERTURNING_MOMENT
+[OVERTURNING_COEFFICIENTS]
+ QSX1                    = -8.33183380E-03      $Lateral force induced overturning moment
+ QSX2                    =  1.50294760E+00      $Camber induced overturning couple
+ QSX3                    =  4.51677940E-02      $Fy induced overturning couple
+$-------------------------------------------------------------LATERAL_FORCE
+[LATERAL_COEFFICIENTS]
+ PCY1                    =  1.69205730E+00      $Shape factor Cfy for lateral forces
+ PDY1                    = -2.76573040E+00      $Lateral friction Muy
+ PDY2                    = -9.47221710E-02      $Variation of friction Muy with load
+ PDY3                    =  1.71738060E+01      $Variation of friction Muy with squared camber
+ PEY1                    =  1.42923300E+00      $Lateral curvature Efy at Fznom
+ PEY2                    =  3.49641850E-01      $Variation of curvature Efy with load
+ PEY3                    =  4.26360910E-02      $Zero order camber dependency of curvature Efy
+ PEY4                    =  4.88942290E-01      $Variation of curvature Efy with camber
+ PKY1                    = -5.92848810E+01      $Maximum value of stiffness Kfy/Fznom
+ PKY2                    =  2.17108260E+00      $Load at which Kfy reaches maximum value
+ PKY3                    =  1.55281050E+00      $Variation of Kfy/Fznom with camber
+ PHY1                    =  4.25918790E-03      $Horizontal shift Shy at Fznom
+ PHY2                    =  3.19599320E-03      $Variation of shift Shy with load
+ PHY3                    =  8.69584940E-02      $Variation of shift Shy with camber
+ PVY1                    =  1.09977850E-01      $Vertical shift in Svy/Fz at Fznom
+ PVY2                    = -8.49008980E-03      $Variation of shift Svy/Fz with load
+ PVY3                    = -8.29313770E-01      $Variation of shift Svy/Fz with camber
+ PVY4                    = -9.36400760E-01      $Variation of shift Svy/Fz with camber and load
+ RBY1                    =  1.48289720E+01      $Slope factor for combined Fy reduction
+ RBY2                    = -1.70419630E+01      $Variation of slope Fy reduction with alpha
+ RBY3                    = -1.50032580E-02      $Shift term for alpha in slope Fy reduction
+ RCY1                    =  8.22038460E-01      $Shape factor for combined Fy reduction
+ REY1                    = -5.77787110E+00      $Curvature factor of combined Fy
+ REY2                    = -5.08152620E-02      $Curvature factor of combined Fy with load
+ RHY1                    =  1.86132310E-02      $Shift factor for combined Fy reduction
+ RHY2                    =  1.81783250E-02      $Shift factor for combined Fy reduction with load
+ RVY1                    = -3.77398490E-02      $Kappa induced side force Svyk/Muy*Fz at Fznom
+ RVY2                    =  2.00204950E-03      $Variation of Svyk/Muy*Fz with load
+ RVY3                    =  4.08301600E-01      $Variation of Svyk/Muy*Fz with camber
+ RVY4                    = -2.04829830E+00      $Variation of Svyk/Muy*Fz with alpha
+ RVY5                    =  4.84330820E+00      $Variation of Svyk/Muy*Fz with kappa
+ RVY6                    =  2.68691140E+00      $Variation of Svyk/Muy*Fz with atan (kappa)
+ PTY1                    =  0.00000000E+00      $Peak value of relaxation length SigAlp0/R0
+ PTY2                    =  0.00000000E+00      $Value of Fz/Fznom where SigAlp0 is extreme
+$------------------------------------------------------ROLLING_COEFFICIENTS
+[ROLLING_COEFFICIENTS]
+ QSY1                    = 0.00000000E+00       $Rolling resistance torque coefficien)
+ QSY2                    = 0.00000000E+00       $Rolling resistance torque depending on Fx
+ QSY3                    = 0.00000000E+00       $Rolling resistance torque depending on speed
+ QSY3                    = 0.00000000E+00       $Rolling resistance torque depending on speed ^4
+$----------------------------------------------------------ALIGNING_TORQUE
+[ALIGNING_COEFFICIENTS]
+ QBZ1                    =  2.98605500E+01      $Trail slope factor for trail Bpt at Fznom
+ QBZ2                    = -6.64829260E+00      $Variation of slope Bpt with load
+ QBZ3                    = -2.58754170E+00      $Variation of slope Bpt with load squared
+ QBZ4                    =  6.47183000E+00      $Variation of slope Bpt with camber
+ QBZ5                    = -4.04992920E+00      $Variation of slope Bpt with absolute camber
+ QBZ9                    =  2.56480170E-02      $Slope factor Br of residual torque Mzr
+ QBZ10                   = -3.89116900E-03      $Slope factor Br of residual torque Mzr
+ QCZ1                    =  1.05841630E+00      $Shape factor Cpt for pneumatic trail
+ QDZ1                    =  1.35995920E-01      $Peak trail Dpt" = Dpt*(Fz/Fznom*R0)
+ QDZ2                    =  9.95014130E-03      $Variation of peak Dpt" with load
+ QDZ3                    = -5.57692090E-01      $Variation of peak Dpt" with camber
+ QDZ4                    =  2.27705410E+01      $Variation of peak Dpt" with camber squared
+ QDZ6                    = -6.71865330E-02      $Peak residual torque Dmr" = Dmr/(Fz*R0)
+ QDZ7                    =  5.64773220E-02      $Variation of peak factor Dmr" with load
+ QDZ8                    =  1.91820140E-02      $Variation of peak factor Dmr" with camber
+ QDZ9                    =  1.89764330E-03      $Variation of peak factor Dmr" with camber and load
+ QEZ1                    =  1.44621610E-01      $Trail curvature Ept at Fznom
+ QEZ2                    =  2.85593820E-02      $Variation of curvature Ept with load
+ QEZ3                    = -3.16060290E-01      $Variation of curvature Ept with load squared
+ QEZ4                    =  3.67787820E+00      $Variation of curvature Ept with sign of Alpha-t
+ QEZ5                    = -1.86185570E+01      $Variation of Ept with camber and sign Alpha-t
+ QHZ1                    =  5.54974750E-02      $Trail horizontal shift Sht at Fznom
+ QHZ2                    = -4.08386360E-02      $Variation of shift Sht with load
+ QHZ3                    =  9.30866060E-03      $Variation of shift Sht with camber
+ QHZ4                    =  1.13568920E-02      $Variation of shift Sht with camber and load
+ SSZ1                    =  0.00000             $Nominal value of s/R0: effect of Fx on Mz
+ SSZ2                    =  0.00000             $Variation of distance s/R0 with Fy/Fznom
+ SSZ3                    =  0.00000             $Variation of distance s/R0 with camber
+ SSZ4                    =  0.00000             $Variation of distance s/R0 with load and camber
+ QTZ1                    =  0                   $Gyration torque constant
+ MBELT                   =  0                   $Belt mass of the wheel

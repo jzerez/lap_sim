@@ -22,26 +22,15 @@ classdef Car < handle
         end
         
         function cone = calc_cone(self, tire, vels, num_alphas, num_forces)
-            fxs = zeros([1, num_forces * length(vels)]);
-            fys = zeros([1, num_forces * length(vels)]);
-            vs = zeros([1, num_forces * length(vels)]);
-            
-            index = 1;
+            fxs = [];
+            fys = [];
+            fzs = [];
             for vel = vels
-                
                 circle = self.calc_friction_circle(tire, vel, num_alphas, num_forces);
-                zs = vel * ones([1, num_forces]);
-                flat_index = (index - 1) * num_forces + 1;
-                fxs(flat_index:flat_index + num_forces - 1) = circle(1, :);
-                fys(flat_index:flat_index + num_forces - 1) = circle(2, :);
-                vs(flat_index:flat_index + num_forces - 1) = zs;
-                index = index + 1;
+                zs = vel * ones(1:num_forces);
+                circle = [circle; zs];
             end
-            scatter3(fxs, fys, vs)
-            cone = zeros([3, num_forces * length(vels), length(vels)]);
-            cone(1, :, :) = fxs;
-            cone(2, :, :) = fys;
-            cone(3, :, :) = vs;
+            
         end
         
         function circle = calc_friction_circle(self, tire, vel, num_alphas, num_forces)
@@ -93,9 +82,7 @@ classdef Car < handle
                 index = index + 1;
             end
             [xs, ys] = pol2cart(thetas, rs);
-            circle = [xs; ys];
-            figure
-            polarplot(thetas, rs)
+            circle = [xs'; ys'];
         end
     end
 end

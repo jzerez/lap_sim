@@ -7,57 +7,48 @@ color = imread("MichiganTrack2019.jpg");
 grey = rgb2gray(color);
 bw = grey<=125;
 scale = 0.4;
-%figure
-%imshow(bw)
 
-start_x = size(bw,2)/2-50;
-start_y = min(find(bw(:,start_x)));
-start = [start_y,start_x];
+start_x = size(bw,2)/2-50;              %define starting x-coordinate for boundary trace
+start_y = min(find(bw(:,start_x)));     %define starting y-coordinate for boundary trace
+start = [start_y,start_x];              %starting coordinate
 
-boundary = bwtraceboundary(bw,start,'N');
+boundary = bwtraceboundary(bw,start,'N');       %trace of bw image along boundary 
 %scale = 1/(max(boundary(:,2))/(10.8667*60.96));
-reduced = boundary(1:20:end,:);
-
-% hold on;
-% plot(start_x,start_y,'bd')
-% plot(reduced(:,2),reduced(:,1),'g','LineWidth',1);
-% hold off
+reduced = boundary(1:10:end,:);
 
 points = zeros(size(reduced));
 points(:,1) = reduced(:,2)*scale;
 points(:,2) = (reduced(:,1)*-1+670).*scale;
 
 figure
-plot(points(:,1),points(:,2))
+plot(points(:,1),points(:,2)) %plot track
 
-diff_points = [points; points(2,:)];
-% d1 = diff(diff_points);
-% d2 = diff(diff_points,2);
-% d1 = d1(1:size(d2,1),:);
-% d1 = d1(:,2)./d1(:,1);
-% d2 = d2(:,2)./d2(:,1);
-% radius = (1+(d1).^2).^(3/2)./abs(d2);
+diff_points = [points(end,:); points];
+points = points(1:end-1,:);             %remove repeat
 
-points = points(1:end-1,:);
-
-for i = 1:size(diff_points,1)-2;
-    center(i,:)=calc_circle(diff_points(i,:),diff_points(i+1,:),diff_points(i+2,:));
-    better_radius(i) = norm(diff_points(i,:)-center(i));
+for i = 1:size(diff_points,1)-2
+    center(i,:)= calc_circle(diff_points(i,:),diff_points(i+1,:),diff_points(i+2,:));
+    radius_vector(i,:) = center(i,:)-diff_points(i+1,:);
+    radius(i) = norm(center(i,:)-diff_points(i+1,:));
 end
 
-% hold on
+% hold ons
 % ind = better_radius <= 100;
 % plot(points(ind,1),points(ind,2),'ro')
 % hold off
 
+apex = points(radius'<=20,:);
 zz = zeros(size(points,1),2);
 figure
 hold on
-surf([points(:,1) points(:,1)],[points(:,2) points(:,2)],zz,[better_radius' better_radius'],'EdgeColor','interp');
+surf([points(:,1) points(:,1)],[points(:,2) points(:,2)],zz,[radius' radius'],'EdgeColor','interp');
+plot(apex(:,1),apex(:,2),'bd')
+%plot(center(:,1),center(:,2),'ro')
+%quiver(diff_points(2:end-1,1),diff_points(2:end-1,2),radius_vector(:,1),radius_vector(:,2),'g-')
 colormap parula
 colorbar
+caxis([0 75])
 hold off
-
 %%
 function center = calc_circle(p1, p2, p3)
     mid1 = (p2+p1) / 2;

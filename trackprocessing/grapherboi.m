@@ -15,7 +15,7 @@ start = [start_y,start_x];              % starting coordinate
 boundary = bwtraceboundary(track,start,'N')';       %trace of bw image along boundary 
 %%
 close all
-reduced = boundary(:,1:4:end);
+reduced = boundary(:,1:4:end);          
 
 points = zeros(size(reduced));
 points(1, :) = reduced(2, :)*scale;
@@ -49,13 +49,34 @@ for i = 1:num_pts
 end
 
 rs = fliplr(rs);
-apex = points(:,islocalmax(rs));
+turns = rs(1,:)>=0.04; %labels points as being part of a turn (1) or a straight (0)
+
+i = 1;
+j = 1;
+while i<size(rs,2)-1
+    init = i
+    while turns(i)-turns(i+1)==0
+        i = i+1;
+        if i == size(rs,2)-1
+            break
+        end
+    end
+    if turns(init) == 1
+        [curve, index] = max(rs(:,init:i));
+        apex(j) = init+index-1; 
+        j = j+1;
+    end
+    i = i+1;
+end
+%apex = points(:,islocalmax(rs));
 
 zz = zeros([2, length(points)]);
 figure
 hold on
 h = surf([points(1,:); points(1,:)], [points(2,:); points(2,:)],zz,[rs; rs],'EdgeColor','interp');
 set(h, 'LineWidth', 2.5)
+plot(points(1,turns),points(2,turns),'ro')
+plot(points(1,apex),points(2,apex),'bd')
 %plot(apex(1,:),apex(2,:),'bd')
 %plot(center(:,1),center(:,2),'ro')
 %quiver(diff_points(2:end-1,1),diff_points(2:end-1,2),radius_vector(:,1),radius_vector(:,2),'g-')
@@ -66,7 +87,6 @@ colorbar
 %scatter(manual_apex(:,1),manual_apex(:,2),[],'g','filled','s')
 hold off
 disp(1/max(rs) + 2.25)
-
 %%
 function center = calc_circle(p1, p2, p3)
     mid1 = (p2+p1) / 2;

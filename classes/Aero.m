@@ -19,7 +19,7 @@ classdef Aero
         
         function drag = calc_drag(self, vel)
             % Calculates the drag force in Newtons for a given velocity
-            drag = self.coef_drag * self.rho * vel^2 * self.area * 0.5;
+            drag = -self.coef_drag * self.rho * vel^2 * self.area * 0.5;
         end
         
         function lift = calc_lift(self, vel)

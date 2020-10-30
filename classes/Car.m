@@ -6,7 +6,7 @@ classdef Car < handle
         frction_cone;
         aero;
         g = -9.81;      % m/s^2 (gravitational constant)
-        
+        min_rs;
     end
     
     methods
@@ -35,8 +35,9 @@ classdef Car < handle
             %   num_forces: number of points that make up each profile of the cone 
             % 
             % Returns:
-            %   cone: 2D matrix containing the points in [fx; fy; velocity]
-            %   space that make up the friction cone. 
+            %   cone: 3D matrix containing the points in [fx; fy; velocity]
+            %   space that make up the friction cone. Third dimension is
+            %   velocity
             
             % initialize vectors to store forces and velocities
             fxs = zeros([1, num_forces * length(vels)]);
@@ -47,6 +48,7 @@ classdef Car < handle
             index = 1;
             figure
             hold on
+            cone = zeros([3, num_forces, length(vels)]);
             for vel = vels
                 % calculate friction circle for specific velocity
                 circle = self.calc_friction_circle(tire, vel, num_alphas, num_forces);
@@ -56,17 +58,18 @@ classdef Car < handle
                 fys(flat_index:flat_index + num_forces - 1) = circle(1, :);
                 fxs(flat_index:flat_index + num_forces - 1) = circle(2, :);
                 vs(flat_index:flat_index + num_forces - 1) = zs;
-                plot3(circle(1, :), circle(2, :), zs, 'k--')
+                cone(:, :, index) = [circle; zs];
+                plot3(circle(1, :), circle(2, :), zs, 'k:')
                 index = index + 1;
             end
-            scatter3(fys, fxs, vs, 'bo')
+            scatter3(fys, fxs, vs, 'b.')
             xlabel('Lateral Force F_y (N)')
             ylabel('Longitudinal Force F_x (N)')
             zlabel('Velocity (m/s)')
-            cone = zeros([3, num_forces * length(vels)]);
-            cone(1, :) = fxs;
-            cone(2, :) = fys;
-            cone(3, :) = vs;
+            for f = 1:num_forces
+                index = f:num_forces:length(fxs);
+                plot3(fys(index), fxs(index), vs(index), 'b:')
+            end
         end
         
         function circle = calc_friction_circle(self, tire, vel, num_alphas, num_forces)
@@ -86,6 +89,8 @@ classdef Car < handle
             % Normal force (N)
             % Need to be positive!!
             Fz = -(self.mass * self.g + self.aero.calc_lift(vel)) ./ 4;
+            % drag force due to aero (should be negative!) (N)
+            F_drag = self.aero.calc_drag(vel);
             % Fz = -self.mass * self.g;
             disp(self.aero.calc_lift(vel) / (self.mass * self.g))
             Fzs = ones([1, num_samples]) * Fz;
@@ -116,6 +121,7 @@ classdef Car < handle
             % swept over
             curves = zeros([2, num_samples, num_alphas]);
             index = 0;
+
 %             figure
 %             xlabel('Lateral Force F_y (N)')
 %             ylabel('Longitudinal Force F_x (N)')
@@ -138,6 +144,8 @@ classdef Car < handle
                 fys = -squeeze(tire_res(:,2,:));
                 % Longitudinal Forces
                 fxs = squeeze(tire_res(:,1,:));
+
+                
 %                 plot(fys, fxs, 'b-')
                 
                 % Convert to polar coordinates
@@ -150,9 +158,8 @@ classdef Car < handle
             end
             % Calculate the max envelope of all of the curves
             circle = self.fit_friction_circle(curves, num_forces);
-%             
+            circle(2,:) = circle(2, :) + F_drag;
 %             scatter(circle(1, :), circle(2,:), 'k*')
-            
             
         end
         

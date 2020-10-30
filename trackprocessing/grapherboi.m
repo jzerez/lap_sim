@@ -6,7 +6,7 @@ clear all
 manual_apex = xlsread('apex.xlsx')*.4;
 track = ~imbinarize(rgb2gray(imread("MichiganTrack2019.jpg")), 0.5);
  
-scale = 0.4;
+scale = 0.4;                            % scale of 1 pixel = 0.4 meters
 
 start_x = size(track,2)/2;              % define starting x-coordinate for boundary trace
 start_y = find(track(:,start_x), 1);    % define starting y-coordinate for boundary trace
@@ -15,55 +15,58 @@ start = [start_y,start_x];              % starting coordinate
 boundary = bwtraceboundary(track,start,'N')';       %trace of bw image along boundary 
 %%
 close all
-reduced = boundary(:,1:4:end);          
+reduced = boundary(:,1:4:end);          % reduce granularity of track by only using every 4th pixel
 
-points = zeros(size(reduced));
-points(1, :) = reduced(2, :)*scale;
-points(2, :) = (-reduced(1, :)+670).*scale;
+points = zeros(size(reduced));          % create empty matrix
+points(1, :) = reduced(2, :)*scale;     % convert pixel positions to meters and move x-coordinates to first row
+points(2, :) = (-reduced(1, :)+670).*scale;     % convert pixel positions to meters and move y-coordinates to second row
 
 figure
-plot(points(1, :),points(2, :)) %plot track
-diff_points = diff([points(:, end), points], 1, 2);
-rs = zeros([1, length(points)]);
-ds = zeros(size(rs));
-angles = zeros(size(rs));
+plot(points(1, :),points(2, :))         %plot track
+diff_points = diff([points(:, end), points], 1, 2);     % calculate the relative location of points
+rs = zeros([1, length(points)]);        % create empty matrix to hold curvature values
+ds = zeros(size(rs));                   % create empty matrix to hold arc length values
+angles = zeros(size(rs));               % create empty matrix to hold delta angle values
 
-mean_size = 6;
+mean_size = 6;                          % number of points in the arc
 
-num_pts = length(diff_points);
+num_pts = length(diff_points);          % total number of points that make up the track
 
 for i = 1:num_pts
-    shifted = circshift(diff_points,i+(mean_size/2)-1,2);
+    shifted = circshift(diff_points,i+(mean_size/2)-1,2);   % shift array so arc is first (mean_size) elements
     
-    v1 = unit(shifted(:, 1));
-    v2 = unit(shifted(:, mean_size+1));
+    v1 = unit(shifted(:, 1));       % unit vector representing the track direction at the first point 
+    v2 = unit(shifted(:, mean_size+1)); % unit vector representing the track direction at the last point
     
-    vs = vecnorm(shifted(:, 1:mean_size+1));
+    vs = vecnorm(shifted(:, 1:mean_size+1));    % calculate the distance between points
     
-    angle = acos(dot(v1, v2));
-    d = sum(vs);
+    angle = acos(dot(v1, v2));      % calculate the change in angle along the arc
+    d = sum(vs);                    % calculate arc length
 
-    angles(i) = real(angle);
-    ds(i) = d;
-    rs(i) = (real(angle) / d);
+    angles(i) = real(angle);        % store angle value
+    ds(i) = d;                      % store arc length
+    rs(i) = (real(angle) / d);      % store curvature value (at the midpoint of the arc)
 end
 
-rs = fliplr(rs);
-turns = rs(1,:)>=0.04; %labels points as being part of a turn (1) or a straight (0)
+rs = fliplr(rs);        % flip array to match points
+turns = rs(1,:)>=0.04;  %labels points as being part of a turn (1) or a straight (0)
+
+% Calculate turn apexes by finding global maximum of curvature along a
+% continuous turn
 
 i = 1;
 j = 1;
 while i<size(rs,2)-1
     init = i
-    while turns(i)-turns(i+1)==0
+    while turns(i)-turns(i+1)==0        % find continuous turns/straights
         i = i+1;
         if i == size(rs,2)-1
             break
         end
     end
-    if turns(init) == 1
-        [curve, index] = max(rs(:,init:i));
-        apex(j) = init+index-1; 
+    if turns(init) == 1     % if not a straight
+        [curve, index] = max(rs(:,init:i));     % find global max
+        apex(j) = init+index-1;             % save global index
         j = j+1;
     end
     i = i+1;

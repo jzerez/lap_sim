@@ -1,10 +1,9 @@
 %%
-%requires image resolution of 150ppi. Track should be scaled to 1in = 200ft in image. Plots will have a scale ratio of 0.4 m per unit.  
+% requires image resolution of 150ppi. Track should be scaled to 1in = 200ft in image. Plots will have a scale ratio of 0.4 m per unit.  
 %%
 clear all
-%close all
 manual_apex = xlsread('apex.xlsx')*.4;
-track = ~imbinarize(rgb2gray(imread("MichiganTrack2019.jpg")), 0.5);
+track = ~imbinarize(rgb2gray(imread('MichiganTrack2019.jpg')), 0.5);
  
 scale = 0.4;                            % scale of 1 pixel = 0.4 meters
 
@@ -57,7 +56,7 @@ turns = rs(1,:)>=0.04;  %labels points as being part of a turn (1) or a straight
 i = 1;
 j = 1;
 while i<size(rs,2)-1
-    init = i
+    init = i;
     while turns(i)-turns(i+1)==0        % find continuous turns/straights
         i = i+1;
         if i == size(rs,2)-1
@@ -71,25 +70,22 @@ while i<size(rs,2)-1
     end
     i = i+1;
 end
-%apex = points(:,islocalmax(rs));
 
 zz = zeros([2, length(points)]);
 figure
 hold on
 h = surf([points(1,:); points(1,:)], [points(2,:); points(2,:)],zz,[rs; rs],'EdgeColor','interp');
 set(h, 'LineWidth', 2.5)
-plot(points(1,turns),points(2,turns),'ro')
+%scatter3(manual_apex(:,1),manual_apex(:,2),zeros(size(manual_apex,1),1),'g', 'filled','o','MarkerSize', 2)
+plot(manual_apex(:,1),manual_apex(:,2),'g*','MarkerSize',7)
 plot(points(1,apex),points(2,apex),'bd')
-%plot(apex(1,:),apex(2,:),'bd')
-%plot(center(:,1),center(:,2),'ro')
-%quiver(diff_points(2:end-1,1),diff_points(2:end-1,2),radius_vector(:,1),radius_vector(:,2),'g-')
 colormap jet
 colorbar
 % caxis([0 75])
 %plot(points(1,apex),points(2,apex),'ro')
 %scatter(manual_apex(:,1),manual_apex(:,2),[],'g','filled','s')
 hold off
-disp(1/max(rs) + 2.25)
+%disp(1/max(rs) + 2.25)
 %%
 function center = calc_circle(p1, p2, p3)
     mid1 = (p2+p1) / 2;

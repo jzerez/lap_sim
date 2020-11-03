@@ -1,9 +1,8 @@
 classdef Track
     properties
-        % track points 
-        num_points;
-        curvature; % curvature of the track at each point
-        apex; 
+        num_points; % track points 
+        curvature;  % curvature of the track at each point
+        apex;       % indices of apex points
     end
     
     methods
@@ -67,7 +66,7 @@ classdef Track
             curvature = fliplr(rs);        % flip array to match points
             self.curvature = curvature; 
                 
-            if exist('apex_points','var')
+            if exist('apex_points','var')   %using manually located apexes
                 disp("Manual")
                 manual_apex = xlsread(apex_points)'.*scale;
                 for i = 1:size(manual_apex,2)
@@ -76,6 +75,7 @@ classdef Track
                 end
                 
             else
+               % computationally find apexes
                disp("Computational")
                turns = curvature(1,:)>=0.04;  %labels points as being part of a turn (1) or a straight (0)
 

@@ -1,6 +1,7 @@
 classdef Dummy
     properties
         mass;
+        num_points = 100;
     end
     
     methods

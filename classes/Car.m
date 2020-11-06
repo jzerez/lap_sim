@@ -3,19 +3,19 @@ classdef Car < handle
         mass;
         accumulator;
         transmission;
-        frction_cone;
+        friction_cone;
         aero;
         g = -9.81;      % m/s^2 (gravitational constant)
         min_rs;
     end
     
     methods
-        function self = Car(accumulator, transmission, frction_cone, aero)
+        function self = Car(accumulator, transmission, aero, tire)
             self.accumulator = accumulator;
             self.transmission = transmission;
-            self.frction_cone = frction_cone;
             self.aero = aero;
             self.mass = self.calc_mass();
+            self.friction_cone = self.calc_cone(tire, [1,5:5:35], 20, 25);
         end
         
         function mass = calc_mass(self)
@@ -35,7 +35,7 @@ classdef Car < handle
             %   num_forces: number of points that make up each profile of the cone 
             % 
             % Returns:
-            %   cone: 3D matrix containing the points in [fx; fy; velocity]
+            %   cone: 3D matrix containing the points in [fy; fx; velocity]
             %   space that make up the friction cone. Third dimension is
             %   velocity
             
@@ -82,7 +82,7 @@ classdef Car < handle
             %   num_forces: number of points that make up each profile of the cone 
             %
             % Returns:
-            %   circle: a 2D matrix in [fx; fy] space that represents the points along the friction circle
+            %   circle: a 2D matrix in [fy; fx] space that represents the points along the friction circle
            
             % Number of slip ratio values to sweep
             num_samples = 1000;
@@ -90,7 +90,8 @@ classdef Car < handle
             % Need to be positive!!
             Fz = -(self.mass * self.g + self.aero.calc_lift(vel)) ./ 4;
             % drag force due to aero (should be negative!) (N)
-            F_drag = self.aero.calc_drag(vel);
+%             F_drag = self.aero.calc_drag(vel);
+            F_drag = 0;
             % Fz = -self.mass * self.g;
             disp(self.aero.calc_lift(vel) / (self.mass * self.g))
             Fzs = ones([1, num_samples]) * Fz;
@@ -110,7 +111,7 @@ classdef Car < handle
             vxs = ones([1, num_samples]) * vel;
             
             % slip angles (radians)
-            alphas_to_sweep = linspace(0, deg2rad(12), num_alphas);
+            alphas_to_sweep = linspace(0, deg2rad(10), num_alphas);
             
             % A collection of Friction circle curves. 
             % The first dimension represents the [r;theta] values of a given

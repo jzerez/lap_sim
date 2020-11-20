@@ -4,10 +4,10 @@ classdef Simulator < handle
         track;          % Track object
         pos = 0;        % Representing the apex number (integer)
         time = 0;       % Total Laptime (s)
-        vels;
-        accels;
-        last_point_ind = 0;
-        min_rs;
+        vels;           % Maximum possible velocity at each track point
+        accels;         % Maximum possible acceleration at each track point
+        last_point_ind = 0;     
+        min_rs;         % list of minimum radii for range of velocities
         t_step = 0.01;  % timestep (s)
     end
     
@@ -19,33 +19,6 @@ classdef Simulator < handle
             self.calc_min_rs(self.car.friction_cone);
             self.vels = zeros([1, self.track.num_points]);
             self.accels = zeros([1, self.track.num_points]);
-        end
-        
-        function self = calc_leg(self)
-            % Calculates the time between the current apex and the next
-            % apex. Also updates current position 
-            [points, radii] = self.track.get_points(self.pos);
-            apex1_r = radii(1);
-            apex2_r = radii(end);
-            
-            n_points = size(points, 2);
-            
-            vels = zeros([1, n_points]);
-            accels = zeros([1, n_points]);
-            
-            v1 = self.calc_max_vel(apex1_r);
-            v2 = self.calc_max_vel(apex2_r);
-            
-            for i = 1:n_points
-                point = points(:, i);
-                radius = radii(:, i);
-                [fx, fy] = self.car.calc_forces(v, r);
-            end
-            
-           
-            
-            
-            self.pos = self.pos + 1;
         end
         
         function self = calc_min_rs(self, cone)
@@ -64,7 +37,62 @@ classdef Simulator < handle
             self.min_rs = [rs; vs];
         end
         
-        function vel = calc_max_vel(self, cone, r)
+        function self = calc_leg(self)
+            % Calculates the time between the current apex and the next
+            % apex. Also updates current position 
+            [points, radii] = self.track.get_points(self.pos);  % retrieve points in current lap section (current apex to next apex)
+            apex1_r = radii(1);         % radius of the turn at the first apex
+            apex2_r = radii(end);       % radius of the turn at the second apex
+            
+            n_points = size(points, 2); % number of points in the lap section
+            
+            vels = zeros([1, n_points]);
+            forward_vels = vels;
+            reverse_vels = vels;
+            accels = zeros([1, n_points]);
+            forward_accels = accels;
+            reverse_accels = accels; 
+            
+            forward_vels(1) = self.calc_max_vel(apex1_r);    % calculate the maximum possible velocity at the first apex
+            reverse_vels(1) = self.calc_max_vel(apex2_r);    % calculate the maximum possible velocity at the second apex
+            
+            dist = norm(diff([points(:, end), points], 1, 2));  % calculates the distances between points in the leg
+            
+            % forward acceleration integration
+            for i = 1:size(dist,2)
+                [forward_fx,forward_fy] = self.interp_force(self.car.friction_cone, forward_vels(i), radii(i), 1);    % forces at first apex
+                forward_accels(i) = forward_fx/self.car.mass;
+                time = max(roots([forward_accels(i)/2 forward_vels(i) -dist(i)]));
+                forward_vels(i+1) = forward_vels(i)+forward_accels(i)*time;
+            end 
+            
+            
+            
+            % reverse acceleration integration
+            for j = 1:size(dist,2)
+                [reverse_fx,reverse_fy] = self.interp_force(self.car.friction_cone, reverse_vels(i), radii(end+1-i), -1);   % forces at second apex
+                reverse_accels(i) = reverse_fx/self.car.mass;
+                time = min(roots([reverse_accels(i)/2 reverse_vels(i) -dist(end+1-i)]));
+                reverse_vels(i+1) = reverse_vels(i)+reverse_accels(i)*time;
+            end
+            
+            integrated_vels = [forward_vels; fliplr(reverse_vels)];
+            integrated_accels = [forward_accels; fliplr(reverse_accels)];
+            
+            vels = min(integrated_vels);
+            accels = min(integrated_accels);
+            
+            figure
+            hold on
+            plot(forward_vels,'ro-')
+            plot(fliplr(reverse_vels),'bs-')
+            xlabel('Point in Leg')
+            ylabel('Velocity')
+            legend('Forwards Integration', 'Reverse Integration')
+            hold off
+        end
+        
+        function vel = calc_max_vel(self, r)
             % Calculates the maximum velocity (m/s) possible for a given
             % radius (m)
             [ind1, ind2] = self.find_closest_inds(self.min_rs(1, :), r);
@@ -100,11 +128,13 @@ classdef Simulator < handle
             
             fy = v^2 * self.car.mass / r;
             circle = self.interp_circle(cone, v);
-            valid_points = circle(:, sign(circle(1, :)) == sign(acc));
+            valid_points = circle(:, sign(circle(2, :)) == sign(acc));
             fys = valid_points(2,:);
             [ind1, ind2] = self.find_closest_inds(fys, fy);
             ps = valid_points(:, ind1:ind2);
-            fx = interp1(ps(2,:), ps(1,:), fy);
+            % FIX LATER: ADD EXTRA ZERO CROSSING POINT SO WE DONT NEED TO
+            % EXTRAPOLATE
+            fx = interp1(ps(2,:), ps(1,:), fy, 'linear','extrap');
             
         end
         
@@ -113,10 +143,21 @@ classdef Simulator < handle
             % if it were inserted into the array
             all_elements = sort([arr, x]);
             ind2 = find(all_elements == x);
+            if ind2 > length(arr)
+                ind2 = length(arr);
+            end
+            if ind2 == 1
+                ind2 = 2;
+            end
             ind1 = ind2 - 1;
+            
+           
         end
         
-        
+        function update(self)
+            self.calc_leg;
+            self.pos = self.pos+1;
+        end
         
     end
 end

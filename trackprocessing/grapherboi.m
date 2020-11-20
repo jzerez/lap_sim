@@ -64,9 +64,11 @@ while i<size(rs,2)-1
         end
     end
     if turns(init) == 1     % if not a straight
-        [curve, index] = max(rs(:,init:i));     % find global max
-        apex(j) = init+index-1;             % save global index
-        j = j+1;
+        %if i-init > 0
+            [curve, index] = max(rs(:,init:i));     % find global max
+            apex(j) = init+index-1;             % save global index
+            j = j+1;
+        %end
     end
     i = i+1;
 end
@@ -77,10 +79,13 @@ hold on
 h = surf([points(1,:); points(1,:)], [points(2,:); points(2,:)],zz,[rs; rs],'EdgeColor','interp');
 set(h, 'LineWidth', 2.5)
 %scatter3(manual_apex(:,1),manual_apex(:,2),zeros(size(manual_apex,1),1),'g', 'filled','o','MarkerSize', 2)
-plot(manual_apex(:,1),manual_apex(:,2),'g*','MarkerSize',7)
-plot(points(1,apex),points(2,apex),'bd')
+%plot(manual_apex(:,1),manual_apex(:,2),'g*','MarkerSize',7)
+plot(points(1,apex),points(2,apex),'bd','MarkerSize',10)
 colormap jet
 colorbar
+xlabel('X Position (m)')
+ylabel('Y Position (m)')
+%title('Calculated Apex Points')
 % caxis([0 75])
 %plot(points(1,apex),points(2,apex),'ro')
 %scatter(manual_apex(:,1),manual_apex(:,2),[],'g','filled','s')

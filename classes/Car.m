@@ -207,5 +207,10 @@ classdef Car < handle
             [fys, fxs] = pol2cart(thetas, rs);
             circle = [fys; fxs];
         end
+        
+%         function [fx, fy] = calc_forces(v,r)
+%             fy = (self.mass*v^2)/r;     % lateral force
+%             fx = 1;
+%         end
     end
 end

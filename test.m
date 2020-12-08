@@ -1,10 +1,13 @@
 clear all
 close all
 addpath classes
-a = Dummy(110);
+a = Dummy(150);
 aero = Aero(3, 1.5, -2.5, 0, 1);
+load('./assets/motors/emrax228_continuous_torque_vs_rpm_curve.mat')
+transmission = Transmission(70, 3.75, curve);
 tire = './assets/tires/Hoosier_18x6_10_7in_14psi_V43.tir';
-c = Car(a, a, aero, tire);
+tire_r = 0.2;
+c = Car(a, transmission, aero, tire, tire_r);
 % c.mass
 
 % cone = c.calc_cone(tire, [5:5:35], 20, 25);

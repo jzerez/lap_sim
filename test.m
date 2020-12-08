@@ -1,3 +1,4 @@
+clear all
 close all
 addpath classes
 a = Dummy(110);
@@ -18,7 +19,7 @@ c = Car(a, a, aero, tire);
 track_img ='assets/track/MichiganTrack2019.jpg';
 apex_pts = 'assets/track/apex.xlsx';
 t = Track(track_img,apex_pts);
-t.plot
+%t.plot
 t.get_points(0);
 
 s = Simulator(c,t);
@@ -48,19 +49,36 @@ dist = vecnorm(diff(points, 1, 2));  % calculates the distances between points i
 % forward acceleration integration
 for i = 1:size(dist,2)
     [forward_fx,forward_fy] = s.interp_force(s.car.friction_cone, forward_vels(i), radii(i), 1);    % forces at first apex
-    forward_accels(i) = forward_fx/s.car.mass;
+    forward_accels(i) = forward_fx/s.car.mass
+    if forward_accels(i) < 0
+        disp('neg accel')
+        forward_accels(i:size(dist,2)) = 0;
+        forward_vels(i+1:size(dist,2)+1) = forward_vels(i);
+        break
+    end
     time = max(roots([forward_accels(i)/2 forward_vels(i) -dist(i)]));
     forward_vels(i+1) = forward_vels(i)+forward_accels(i)*time;
 end 
 
+figure
+plot([0 cumsum(dist)],forward_vels)
+xlabel('Distance (m)')
+ylabel('Velocity (m/s)')
+title('Forward Integrated Velocity from the Entry Apex')
 
 %%
 % reverse acceleration integration
 for j = 1:size(dist,2)
-    [reverse_fx,reverse_fy] = s.interp_force(s.car.friction_cone, reverse_vels(i), radii(end+1-i), -1);   % forces at second apex
-    reverse_accels(i) = reverse_fx/s.car.mass;
-    time = max(roots([reverse_accels(i)/2 reverse_vels(i) -dist(end+1-i)]));
-    reverse_vels(i+1) = reverse_vels(i)+reverse_accels(i)*time;
+    [reverse_fx,reverse_fy] = s.interp_force(s.car.friction_cone, reverse_vels(j), radii(end+1-j), -1);   % forces at second apex
+    reverse_accels(j) = reverse_fx/s.car.mass;
+    if reverse_accels(j) > 0
+        disp('pos accel')
+        reverse_accels(j:size(dist,2)) = 0;
+        reverse_vels(j+1:size(dist,2)+1) = reverse_vels(j);
+        break
+    end
+    time = max(roots([reverse_accels(j)/2 reverse_vels(j) -dist(end+1-j)]));
+    reverse_vels(j+1) = reverse_vels(j)+reverse_accels(j)*time;
 end
 
 integrated_vels = [forward_vels; fliplr(reverse_vels)];
@@ -77,3 +95,9 @@ xlabel('Point in Leg')
 ylabel('Velocity')
 legend('Forwards Integration', 'Reverse Integration')
 hold off
+
+%%
+% fys = [1.2372 1.2287];
+% fxs = [-0.3315 -0.1618];
+% 
+% interp1(fys,fxs,1.0715)

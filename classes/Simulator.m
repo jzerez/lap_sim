@@ -40,34 +40,39 @@ classdef Simulator < handle
         function self = calc_leg(self)
             % Calculates the time between the current apex and the next
             % apex. Also updates current position 
-            [points, radii] = self.track.get_points(self.pos);  % retrieve points in current lap section (current apex to next apex)
+            [points, radii] = s.track.get_points(s.pos);  % retrieve points in current lap section (current apex to next apex)
+
             apex1_r = radii(1);         % radius of the turn at the first apex
             apex2_r = radii(end);       % radius of the turn at the second apex
-            
+
             n_points = size(points, 2); % number of points in the lap section
-            
+
             vels = zeros([1, n_points]);
             forward_vels = vels;
             reverse_vels = vels;
             accels = zeros([1, n_points]);
             forward_accels = accels;
             reverse_accels = accels; 
-            
-            forward_vels(1) = self.calc_max_vel(apex1_r);    % calculate the maximum possible velocity at the first apex
-            reverse_vels(1) = self.calc_max_vel(apex2_r);    % calculate the maximum possible velocity at the second apex
-            
-            dist = norm(diff([points(:, end), points], 1, 2));  % calculates the distances between points in the leg
-            
+
+            forward_vels(1) = s.calc_max_vel(apex1_r);    % calculate the maximum possible velocity at the first apex
+            reverse_vels(1) = s.calc_max_vel(apex2_r);    % calculate the maximum possible velocity at the second apex
+
+            dist = vecnorm(diff(points, 1, 2));  % calculates the distances between points in the leg
+
             % forward acceleration integration
             for i = 1:size(dist,2)
-                [forward_fx,forward_fy] = self.interp_force(self.car.friction_cone, forward_vels(i), radii(i), 1);    % forces at first apex
-                forward_accels(i) = forward_fx/self.car.mass;
+                [forward_fx,forward_fy] = s.interp_force(s.car.friction_cone, forward_vels(i), radii(i), 1);    % forces at first apex
+                forward_accels(i) = forward_fx/s.car.mass;
+                if forward_accels(i) < 0
+                    disp('neg accel')
+                    forward_accels(i:size(dist,2)) = 0;
+                    forward_vels(i+1:size(dist,2)+1) = forward_vels(i);
+                    break
+                end
                 time = max(roots([forward_accels(i)/2 forward_vels(i) -dist(i)]));
                 forward_vels(i+1) = forward_vels(i)+forward_accels(i)*time;
             end 
-            
-            
-            
+           
             % reverse acceleration integration
             for j = 1:size(dist,2)
                 [reverse_fx,reverse_fy] = self.interp_force(self.car.friction_cone, reverse_vels(i), radii(end+1-i), -1);   % forces at second apex
@@ -109,9 +114,7 @@ classdef Simulator < handle
             % Interpolates the friction circle for a given velocity within
             % the friction cone. 
             vs = squeeze(cone(3,1,:))';
-            all_vs = sort([vs, v]);
-            ind2 = find(all_vs == v);
-            ind1 = ind2 - 1;
+            [ind1, ind2] = self.find_closest_inds(vs,v);
             
             v1 = vs(ind1);
             v2 = vs(ind2);
@@ -125,16 +128,21 @@ classdef Simulator < handle
             % Calculates max force fx, and fy given the velocity of the
             % car, the radius of the turn, and the direction of tangential
             % acceleration
-            
-            fy = v^2 * self.car.mass / r;
-            circle = self.interp_circle(cone, v);
-            valid_points = circle(:, sign(circle(2, :)) == sign(acc));
-            fys = valid_points(2,:);
-            [ind1, ind2] = self.find_closest_inds(fys, fy);
-            ps = valid_points(:, ind1:ind2);
+           
+            fy = v^2 * self.car.mass / r                % Calculate the lateral force for the given velocity and turn radius
+            circle = self.interp_circle(cone, v);       % Interpolate the friction circle for the given velocity
+            valid_points = sortrows(circle(:, sign(circle(2, :)) ~= -sign(acc))')';      % Isolate the points for the given acceleration
+            %fys = valid_points(1,:)                     % Isolate lateral force values from points
+%             [minv, minindx] = min(fys);
+%             [maxv, maxindx] = max(fys);
+%             fys = fys(minindx:maxindx);
+%             valid_points = valid_points(:,minindx:maxindx)
+            %[ind1, ind2] = self.find_closest_inds(fys, fy)
+            %ps = valid_points(:, ind1:ind2)
             % FIX LATER: ADD EXTRA ZERO CROSSING POINT SO WE DONT NEED TO
             % EXTRAPOLATE
-            fx = interp1(ps(2,:), ps(1,:), fy, 'linear','extrap');
+            % [fy; fx] space
+            fx = interp1(valid_points(1,:), valid_points(2,:), fy, 'linear', 'extrap')
             
         end
         
@@ -150,7 +158,6 @@ classdef Simulator < handle
                 ind2 = 2;
             end
             ind1 = ind2 - 1;
-            
            
         end
         

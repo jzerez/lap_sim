@@ -60,12 +60,16 @@ classdef Car < handle
                 zs = vel * ones([1, num_forces]);
                 flat_index = (index - 1) * num_forces + 1;
                 
+                fy = circle(1, :);
+                fx = circle(2, :);
+                % cases where we are torque limited
+                fx(fx > max_fx) = max_fx;
                 
-                fys(flat_index:flat_index + num_forces - 1) = circle(1, :);
-                fxs(flat_index:flat_index + num_forces - 1) = circle(2, :);
+                fys(flat_index:flat_index + num_forces - 1) = fy;
+                fxs(flat_index:flat_index + num_forces - 1) = fx;
                 vs(flat_index:flat_index + num_forces - 1) = zs;
-                cone(:, :, index) = [circle; zs];
-                plot3(circle(1, :), circle(2, :), zs, 'k:')
+                cone(:, :, index) = [[fy; fx]; zs];
+                plot3(fy, fx, zs, 'k:')
                 index = index + 1;
             end
             scatter3(fys, fxs, vs, 'b.')
@@ -166,24 +170,8 @@ classdef Car < handle
             end
             % Calculate the max envelope of all of the curves
             circle = self.fit_friction_circle(curves, num_forces);
-            
-             % calculate corresponding motor rpm given gear ratio
-            motor_rpm = vel / self.tire_r / (2 * pi) * 60 * self.transmission.gear_ratio;
-            curve = self.transmission.torque_vs_rpm;
-            % interpolate max motor torque for given rpm
-            motor_torque_lim = interp1(curve(1, :), curve(2, :), motor_rpm);
-            % Divide by two because max force for each rear wheel is
-            % half of total
-            max_fx = motor_torque_lim * self.transmission.gear_ratio / self.tire_r / 2;
-            
-            fy = circle(1, :);
-            fx = circle(2, :);
-            % cases where we are torque limited
-            fx(fx > max_fx) = max_fx;
-            fx = fx + F_drag;
-            
-            circle = [fy; fx];
-            
+            circle(2,:) = circle(2, :) + F_drag;
+%             scatter(circle(1, :), circle(2,:), 'k*')
             
         end
         

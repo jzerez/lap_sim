@@ -2,20 +2,20 @@ classdef Transmission < handle
     properties
         mass;               % kg
         gear_ratio;         % unitless (driver/driven)
-        torque_vs_rpm;      % torque vs. rpm function [rpm; torque (Nm)]
+        max_torque;        % torque vs. rpm function
     end
     
     methods
-        function self = Transmission(mass, gear_ratio, torque_vs_rpm)
+        function self = Transmission(mass, gear_ratio, max_torque, tire_radius)
             self.mass = mass;
             self.gear_ratio = gear_ratio;
-            self.torque_vs_rpm = torque_vs_rpm;
+            self.max_torque = max_torque;
         end
         
         function res = motor_curve_228(self)
             % The motor curve for an emrax 228
             % Assumes continuous force
-            rpms = [0, 1400, 4000, 5000];
+            rpms = [0, 1400, 4000, 6000];
             torques = [96, 120,120,108];
             res = [rpms; torques];
         end
@@ -24,8 +24,7 @@ classdef Transmission < handle
             % The motor curve for an emrax 208
             % Assumes continuous force
             rpms = [0, 1600, 3000, 6000];
-            torques = [72.5, 80, 80, 65];
-            curve = [rpms; torques];
+            torques = [72.5, 
         end
     end
 

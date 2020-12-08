@@ -2,7 +2,7 @@ classdef Simulator < handle
     properties
         car;            % Car object
         track;          % Track object
-        pos = 0;        % Representing the apex number (integer)
+        pos = 1;        % Representing the apex number (integer)
         time = 0;       % Total Laptime (s)
         vels;           % Maximum possible velocity at each track point
         accels;         % Maximum possible acceleration at each track point
@@ -33,14 +33,13 @@ classdef Simulator < handle
             end
             rs = vs.^2 * self.car.mass ./ max_fys;
             res = [rs; vs];
-            disp(res)
             self.min_rs = [rs; vs];
         end
         
         function self = calc_leg(self)
             % Calculates the time between the current apex and the next
-            % apex. Also updates current position 
-            [points, radii] = s.track.get_points(s.pos);  % retrieve points in current lap section (current apex to next apex)
+            % apex, updates simulation laptime and car position. 
+            [points, radii] = self.track.get_points(self.pos);  % retrieve points in current lap section (current apex to next apex)
 
             apex1_r = radii(1);         % radius of the turn at the first apex
             apex2_r = radii(end);       % radius of the turn at the second apex
@@ -54,15 +53,15 @@ classdef Simulator < handle
             forward_accels = accels;
             reverse_accels = accels; 
 
-            forward_vels(1) = s.calc_max_vel(apex1_r);    % calculate the maximum possible velocity at the first apex
-            reverse_vels(1) = s.calc_max_vel(apex2_r);    % calculate the maximum possible velocity at the second apex
+            forward_vels(1) = self.calc_max_vel(apex1_r);    % calculate the maximum possible velocity at the first apex
+            reverse_vels(1) = self.calc_max_vel(apex2_r);    % calculate the maximum possible velocity at the second apex
 
             dist = vecnorm(diff(points, 1, 2));  % calculates the distances between points in the leg
 
             % forward acceleration integration
             for i = 1:size(dist,2)
-                [forward_fx,forward_fy] = s.interp_force(s.car.friction_cone, forward_vels(i), radii(i), 1);    % forces at first apex
-                forward_accels(i) = forward_fx/s.car.mass;
+                [forward_fx,forward_fy] = self.interp_force(self.car.friction_cone, forward_vels(i), radii(i), 1);    % forces at first apex
+                forward_accels(i) = forward_fx/self.car.mass;
                 if forward_accels(i) < 0
                     disp('neg accel')
                     forward_accels(i:size(dist,2)) = 0;
@@ -72,29 +71,40 @@ classdef Simulator < handle
                 time = max(roots([forward_accels(i)/2 forward_vels(i) -dist(i)]));
                 forward_vels(i+1) = forward_vels(i)+forward_accels(i)*time;
             end 
-           
+            
             % reverse acceleration integration
             for j = 1:size(dist,2)
-                [reverse_fx,reverse_fy] = self.interp_force(self.car.friction_cone, reverse_vels(i), radii(end+1-i), -1);   % forces at second apex
-                reverse_accels(i) = reverse_fx/self.car.mass;
-                time = min(roots([reverse_accels(i)/2 reverse_vels(i) -dist(end+1-i)]));
-                reverse_vels(i+1) = reverse_vels(i)+reverse_accels(i)*time;
+                [reverse_fx,reverse_fy] = self.interp_force(self.car.friction_cone, reverse_vels(j), radii(end+1-j), -1);   % forces at second apex
+                reverse_accels(j) = reverse_fx/self.car.mass;
+                if reverse_accels(j) > 0
+                    disp('pos accel')
+                    reverse_accels(j:size(dist,2)) = 0;
+                    reverse_vels(j+1:size(dist,2)+1) = reverse_vels(j);
+                    break
+                end
+                time = min(roots([reverse_accels(j)/2 reverse_vels(j) -dist(end+1-j)]));
+                reverse_vels(j+1) = reverse_vels(j)-reverse_accels(j)*time;
             end
-            
+
             integrated_vels = [forward_vels; fliplr(reverse_vels)];
             integrated_accels = [forward_accels; fliplr(reverse_accels)];
             
+            % To plot velocity graphs uncomment code below:
+%             figure
+%             hold on
+%             plot([0 cumsum(dist)],forward_vels,'ro-')
+%             plot([0 cumsum(dist)],reverse_vels,'bs-')
+%             xlabel('Distance (m)')
+%             ylabel('Velocity (m/s)')
+%             legend('Forwards Integration', 'Reverse Integration')
+%             hold off
+
             vels = min(integrated_vels);
             accels = min(integrated_accels);
             
-            figure
-            hold on
-            plot(forward_vels,'ro-')
-            plot(fliplr(reverse_vels),'bs-')
-            xlabel('Point in Leg')
-            ylabel('Velocity')
-            legend('Forwards Integration', 'Reverse Integration')
-            hold off
+            leg_time = sum(dist./vels(1:end-1));
+            self.time = self.time+leg_time;
+            self.pos = self.pos+1;
         end
         
         function vel = calc_max_vel(self, r)
@@ -129,7 +139,7 @@ classdef Simulator < handle
             % car, the radius of the turn, and the direction of tangential
             % acceleration
            
-            fy = v^2 * self.car.mass / r                % Calculate the lateral force for the given velocity and turn radius
+            fy = v^2 * self.car.mass / r;               % Calculate the lateral force for the given velocity and turn radius
             circle = self.interp_circle(cone, v);       % Interpolate the friction circle for the given velocity
             valid_points = sortrows(circle(:, sign(circle(2, :)) ~= -sign(acc))')';      % Isolate the points for the given acceleration
             %fys = valid_points(1,:)                     % Isolate lateral force values from points
@@ -142,7 +152,7 @@ classdef Simulator < handle
             % FIX LATER: ADD EXTRA ZERO CROSSING POINT SO WE DONT NEED TO
             % EXTRAPOLATE
             % [fy; fx] space
-            fx = interp1(valid_points(1,:), valid_points(2,:), fy, 'linear', 'extrap')
+            fx = interp1(valid_points(1,:), valid_points(2,:), fy, 'linear', 'extrap')/2;
             
         end
         
@@ -161,9 +171,10 @@ classdef Simulator < handle
            
         end
         
-        function update(self)
-            self.calc_leg;
-            self.pos = self.pos+1;
+        function self = run_simulation(self)
+            for i = 1:length(self.track.apex)
+                self.calc_leg
+            end
         end
         
     end

@@ -124,7 +124,7 @@ classdef Track
             init = self.apex(apex_index+1);
             final = self.apex(apex_index+2);
             points = self.points(:,init:final);
-            radii = 1./self.curvature(init:final)';
+            radii = 1./self.curvature(init:final);
         end
     end
     

@@ -2,7 +2,7 @@ classdef Simulator < handle
     properties
         car;            % Car object
         track;          % Track object
-        pos = 1;        % Representing the apex number (integer)
+        pos = 0;        % Representing the apex number (integer)
         time = 0;       % Total Laptime (s)
         vels;           % Maximum possible velocity at each track point
         accels;         % Maximum possible acceleration at each track point

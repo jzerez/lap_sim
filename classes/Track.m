@@ -35,7 +35,7 @@ classdef Track
             start = [start_y,start_x];              % starting coordinate
             
             boundary = bwtraceboundary(trace, start, 'N')'; % coordinates of each track pixel, x's on the first row, y's on the second
-            reduced = boundary(:, 1:4:end);         % reduce granularity of points
+            reduced = boundary(:, 1:2:end);         % reduce granularity of points
             
             points = zeros(size(reduced));          % create empty matrix
             points(1, :) = reduced(2, :)*scale;     % convert pixel positions to meters and move x-coordinates to first row
@@ -48,7 +48,7 @@ classdef Track
             ds = zeros(size(rs));                   % create empty matrix to hold arc length values
             angles = zeros(size(rs));               % create empty matrix to hold delta angle values
 
-            mean_size = 6;                          % number of points in the arc
+            mean_size = 10;                          % number of points in the arc
 
             num_pts = length(diff_points);          % total number of points that make up the track
 
@@ -81,7 +81,7 @@ classdef Track
             else                            % computationally find apexes
                disp("Computational")
                turns = curvature(1,:)>=0.04;  %labels points as being part of a turn (1) or a straight (0)
-
+%                apex = []
                i = 1;
                j = 1;
                while i<size(curvature,2)-1

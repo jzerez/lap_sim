@@ -152,7 +152,7 @@ classdef Simulator < handle
             % FIX LATER: ADD EXTRA ZERO CROSSING POINT SO WE DONT NEED TO
             % EXTRAPOLATE
             % [fy; fx] space
-            fx = interp1(valid_points(1,:), valid_points(2,:), fy, 'linear', 'extrap')/2;
+            fx = interp1(valid_points(1,:), valid_points(2,:), fy, 'linear')*2;
             
         end
         

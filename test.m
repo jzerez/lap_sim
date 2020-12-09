@@ -19,11 +19,13 @@ c = Car(a, transmission, aero, tire, tire_r);
 % sc = ScoreCalculator(comps);
 
 %test track
-track_img ='assets/track/MichiganTrack2019.jpg';
-apex_pts = 'assets/track/apex.xlsx';
-t = Track(track_img,apex_pts);
+track_img ='assets/track/OvalTrack.jpg';
+% track_img ='assets/track/MichiganTrack2019.jpg';
+% apex_pts = 'assets/track/apex.xlsx';
+t = Track(track_img);
 %t.plot
 t.get_points(0);
+t.plot()
 
 s = Simulator(c,t);
 
@@ -39,6 +41,7 @@ n_points = size(points, 2); % number of points in the lap section
 
 vels = zeros([1, n_points]);
 forward_vels = vels;
+
 reverse_vels = vels;
 accels = zeros([1, n_points]);
 forward_accels = accels;
@@ -51,8 +54,10 @@ dist = vecnorm(diff(points, 1, 2));  % calculates the distances between points i
 
 % forward acceleration integration
 for i = 1:size(dist,2)
+    
     [forward_fx,forward_fy] = s.interp_force(s.car.friction_cone, forward_vels(i), radii(i), 1)    % forces at first apex
     forward_accels(i) = forward_fx/s.car.mass;
+    
     if forward_accels(i) < 0
         disp('neg accel')
         forward_accels(i:size(dist,2)) = 0;
@@ -60,7 +65,9 @@ for i = 1:size(dist,2)
         break
     end
     time = max(roots([forward_accels(i)/2 forward_vels(i) -dist(i)]))
+    dv = forward_accels(i)*time
     forward_vels(i+1) = forward_vels(i)+forward_accels(i)*time;
+    
 end 
 
 figure

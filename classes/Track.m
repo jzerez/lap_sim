@@ -28,21 +28,49 @@ classdef Track
             %   self.apex: list of indexes of points that are at turn
             %       apexes
             
-            trace = ~imbinarize(rgb2gray(imread(track_img)), 0.5);
-            scale = 0.4;                            % meters per pixel
-            start_x = size(trace,2)/2;              % define starting x-coordinate for boundary trace
-            start_y = find(trace(:,start_x), 1);    % define starting y-coordinate for boundary trace
-            start = [start_y,start_x];              % starting coordinate
+            % get track points
+            if track_img == 'ellipse'       % test elliptical track
+                disp('ellipse')
+                width = 150; % meters
+                height = 50; % meters
+                c = 330;
+                p1 = [0, height/2];
+                p2 = [width, height/2];
+                eccentricity = c/(width/2);
+                numPoints = 1000;
+                
+                a = width/2;
+                b = height/2;
+                theta = linspace(0, 2*pi, numPoints);
+                X = a*cos(theta);
+                Y = b*sin(theta);
+                
+                angles = atan2(p2(2)-p1(2), p2(1)-p1(1));
+                points(1,:) = (p1(1)+p2(1))/2 + X.*cos(angles) - Y.*sin(angles);
+                points(2,:) = (p1(2)+p2(2))/2 + X.*sin(angles) + Y.*cos(angles);
+                self.points = points;
+                self.num_points = numPoints;
+                apex = [1,numPoints/2,numPoints];
+                
+            else                            % imported track
+                disp('track')
+                trace = ~imbinarize(rgb2gray(imread(track_img)), 0.5);
+                scale = 0.4;                            % meters per pixel
+                start_x = size(trace,2)/2;              % define starting x-coordinate for boundary trace
+                start_y = find(trace(:,start_x), 1);    % define starting y-coordinate for boundary trace
+                start = [start_y,start_x];              % starting coordinate
+
+                boundary = bwtraceboundary(trace, start, 'N')'; % coordinates of each track pixel, x's on the first row, y's on the second
+                reduced = boundary(:, 1:4:end);         % reduce granularity of points
+
+                points = zeros(size(reduced));          % create empty matrix
+                points(1, :) = reduced(2, :)*scale;     % convert pixel positions to meters and move x-coordinates to first row
+                points(2, :) = (-reduced(1, :)+670).*scale;     % convert pixel positions to meters and move y-coordinates to second row
+                self.points = points;
+                self.num_points = size(points,2);
+            end
             
-            boundary = bwtraceboundary(trace, start, 'N')'; % coordinates of each track pixel, x's on the first row, y's on the second
-            reduced = boundary(:, 1:4:end);         % reduce granularity of points
-            
-            points = zeros(size(reduced));          % create empty matrix
-            points(1, :) = reduced(2, :)*scale;     % convert pixel positions to meters and move x-coordinates to first row
-            points(2, :) = (-reduced(1, :)+670).*scale;     % convert pixel positions to meters and move y-coordinates to second row
-            self.points = points;
-            self.num_points = size(points,2);
-            
+            % calculate track curvature at each point
             diff_points = diff([points(:, end), points], 1, 2);     % calculate the relative location of points
             rs = zeros([1, length(points)]);        % create empty matrix to hold curvature values
             ds = zeros(size(rs));                   % create empty matrix to hold arc length values
@@ -68,8 +96,8 @@ classdef Track
                 rs(i) = (real(angle) / d);      % store curvature value (at the midpoint of the arc)
             end
             curvature = fliplr(rs);        % flip array to match points
-            self.curvature = curvature; 
-                
+            self.curvature = curvature;  
+
             if exist('apex_points','var')   %using manually located apexes
                 disp("Manual")
                 manual_apex = xlsread(apex_points)'.*scale;
@@ -77,7 +105,7 @@ classdef Track
                     [min_val, min_indx] = min(sum((points-manual_apex(:,i)).^2,1));
                     apex(i) = min_indx;
                 end
-                
+
             else                            % computationally find apexes
                disp("Computational")
                turns = curvature(1,:)>=0.04;  %labels points as being part of a turn (1) or a straight (0)
@@ -116,6 +144,9 @@ classdef Track
             colormap jet
             colorbar
             hold off
+            axis equal
+            xlabel('(meters)')
+            ylabel('(meters)')
         end
         
         function [points, radii] = get_points(self, apex_index)

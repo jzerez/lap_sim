@@ -71,7 +71,13 @@ classdef Simulator < handle
                 time = max(roots([forward_accels(i)/2 forward_vels(i) -dist(i)]));
                 forward_vels(i+1) = forward_vels(i)+forward_accels(i)*time;
             end 
-            
+
+            figure
+            plot([0 cumsum(dist)],forward_vels)
+            xlabel('Distance (m)')
+            ylabel('Velocity (m/s)')
+            title('Forward Integrated Velocity from the Entry Apex')
+
             % reverse acceleration integration
             for j = 1:size(dist,2)
                 [reverse_fx,reverse_fy] = self.interp_force(self.car.friction_cone, reverse_vels(j), radii(end+1-j), -1);   % forces at second apex
@@ -88,18 +94,9 @@ classdef Simulator < handle
 
             integrated_vels = [forward_vels; fliplr(reverse_vels)];
             integrated_accels = [forward_accels; fliplr(reverse_accels)];
-            
-            % To plot velocity graphs uncomment code below:
-%             figure
-%             hold on
-%             plot([0 cumsum(dist)],forward_vels,'ro-')
-%             plot([0 cumsum(dist)],reverse_vels,'bs-')
-%             xlabel('Distance (m)')
-%             ylabel('Velocity (m/s)')
-%             legend('Forwards Integration', 'Reverse Integration')
-%             hold off
 
             vels = min(integrated_vels);
+            leg_time = sum(dist./vels(1:end-1));
             accels = min(integrated_accels);
             
             leg_time = sum(dist./vels(1:end-1));
@@ -172,9 +169,10 @@ classdef Simulator < handle
         end
         
         function self = run_simulation(self)
-            for i = 1:length(self.track.apex)
-                self.calc_leg
+            for i = 1:length(self.track.apex)-1
+                self.calc_leg;
             end
+            self.time
         end
         
     end

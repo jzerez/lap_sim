@@ -31,14 +31,15 @@ classdef Car < handle
             fys = max_fy * sqrt(1-((fxs.^2)./max_fx^2));
             
             
-            fys = [fys, fliplr(fys)];
-            fxs = [fxs, fliplr(-fxs)];
+            fys = [fys(2:end), fliplr(fys)] * 4;
+            fxs = [fxs(2:end), fliplr(-fxs)] * 4;
             
-            cone = zeros([3, 50, length(vels)]);
+            cone = zeros([3, 49, length(vels)]);
             figure
+            
             hold on
             for i = 1:length(vels)
-                vel = vels(i)
+                vel = vels(i);
                 nvs = vel * ones(size(fys));
                 circle = [fys; fxs; nvs];
                 cone(:, :, i) = circle;

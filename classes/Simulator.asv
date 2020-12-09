@@ -63,19 +63,33 @@ classdef Simulator < handle
                 [forward_fx,forward_fy] = self.interp_force(self.car.friction_cone, forward_vels(i), radii(i), 1);    % forces at first apex
                 scatter3(forward_fy, forward_fx, forward_vels(i), 'r*')
                 forward_accels(i) = forward_fx/self.car.mass;
-               
+                if forward_accels(i) < 0
+                    disp('neg accel')
+                    forward_accels(i:size(dist,2)) = 0;
+                    forward_vels(i+1:size(dist,2)+1) = forward_vels(i);
+                    break
+                end
                 inputs = [forward_accels(i)/2 forward_vels(i) -dist(i)];
                 time = max(roots(inputs));
                 forward_vels(i+1) = forward_vels(i)+forward_accels(i)*time;
             end 
 
-            
+            figure
+            plot([0 cumsum(dist)],forward_vels)
+            xlabel('Distance (m)')
+            ylabel('Velocity (m/s)')
+            title('Forward Integrated Velocity from the Entry Apex')
 
             % reverse acceleration integration
             for j = 1:size(dist,2)
                 [reverse_fx,reverse_fy] = self.interp_force(self.car.friction_cone, reverse_vels(j), radii(end+1-j), -1);   % forces at second apex
                 reverse_accels(j) = reverse_fx/self.car.mass;
-                
+                if reverse_accels(j) > 0
+                    disp('pos accel')
+                    reverse_accels(j:size(dist,2)) = 0;
+                    reverse_vels(j+1:size(dist,2)+1) = reverse_vels(j);
+                    break
+                end
                 time = min(roots([reverse_accels(j)/2 reverse_vels(j) -dist(end+1-j)]));
                 reverse_vels(j+1) = reverse_vels(j)-reverse_accels(j)*time;
             end
@@ -90,16 +104,6 @@ classdef Simulator < handle
             leg_time = sum(dist./vels(1:end-1));
             self.time = self.time+leg_time;
             self.pos = self.pos+1;
-            
-            hold off
-            figure
-            plot([0 cumsum(dist)],forward_vels)
-            hold on
-            plot([0 cumsum(dist)],fliplr(reverse_vels))
-            plot([0 cumsum(dist)],vels, '--o')
-            xlabel('Distance (m)')
-            ylabel('Velocity (m/s)')
-            title('Forward Integrated Velocity from the Entry Apex')
         end
         
         function vel = calc_max_vel(self, r)
@@ -140,10 +144,7 @@ classdef Simulator < handle
             valid_points = circle(:, sign(circle(2, :)) ~= -sign(acc));      % Isolate the points for the given acceleration
             fx = interp1(valid_points(1,:), valid_points(2,:), fy, 'linear');
             
-            if isnan(fx)
-                disp('neg accel')
-                fx = 0;
-            end
+            if fx
         end
         
         function [ind1, ind2] = find_closest_inds(self, arr, x)

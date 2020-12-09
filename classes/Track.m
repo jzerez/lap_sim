@@ -29,18 +29,19 @@ classdef Track
             %       apexes
 
             % get track points
-            if track_img == 'ellipse'       % test elliptical track
+            if strcmp(track_img, 'ellipse')       % test elliptical track
                 disp('ellipse')
                 width = 150; % meters
                 height = 50; % meters
-                c = 330;
-                p1 = [0, height/2];
-                p2 = [width, height/2];
-                eccentricity = c/(width/2);
-                numPoints = 1000;
-
                 a = width/2;
                 b = height/2;
+%                 c = 330;
+                p1 = [0, height/2];
+                p2 = [width, height/2];
+                eccentricity = sqrt(1-b^2/a^2);
+                numPoints = 1000;
+
+                
                 theta = linspace(0, 2*pi, numPoints);
                 X = a*cos(theta);
                 Y = b*sin(theta);

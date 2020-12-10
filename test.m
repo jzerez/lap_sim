@@ -28,4 +28,5 @@ t.get_points(0);
 
 s = Simulator(c,t);
 s.run_simulation
+s.plot_velocity
 

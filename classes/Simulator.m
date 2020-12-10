@@ -168,5 +168,19 @@ classdef Simulator < handle
             self.time
         end
         
+        function self = plot_velocity(self)
+            zz = zeros([2, self.track.num_points]);
+            figure
+            hold on
+            h = surf([self.track.points(1,:); self.track.points(1,:)], [self.track.points(2,:); self.track.points(2,:)],zz,[self.vels; self.vels]*3.6,'EdgeColor','interp');
+            set(h, 'LineWidth', 2.5)
+            colormap jet
+            colorbar
+            hold off
+            axis equal
+            xlabel('(meters)')
+            ylabel('(meters)')
+        end
+        
     end
 end

@@ -22,10 +22,10 @@ c = Car(a, transmission, aero, tire, tire_r);
 track_img ='assets/track/MichiganTrack2019.jpg';
 apex_pts = 'assets/track/apex.xlsx';
 t = Track(track_img);
-% t.plot
-t.get_points(0);
+t.plot
+% t.get_points(0);
 % t.plot()
 
 s = Simulator(c,t);
 s.run_simulation
-
+s.plot_velocity

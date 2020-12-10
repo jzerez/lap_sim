@@ -17,8 +17,8 @@ classdef Car < handle
             self.aero = aero;
             self.mass = self.calc_mass();
             self.tire_r = tire_r;
-%             self.friction_cone = self.calc_cone(tire, [1,5:5:35], 20, 25);
-            self.friction_cone = self.calc_simple_cone([1, 5:5:35], 1000, 1300);
+            self.friction_cone = self.calc_cone(tire, [1,5:5:35], 20, 25);
+%             self.friction_cone = self.calc_simple_cone([1, 5:5:35], 1000, 1300);
            
         end
         

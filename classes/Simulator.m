@@ -69,8 +69,6 @@ classdef Simulator < handle
                 forward_vels(i+1) = forward_vels(i)+forward_accels(i)*time;
             end 
 
-            
-
             % reverse acceleration integration
             for j = 1:size(dist,2)
                 [reverse_fx,reverse_fy] = self.interp_force(self.car.friction_cone, reverse_vels(j), radii(end+1-j), -1);   % forces at second apex
@@ -86,20 +84,22 @@ classdef Simulator < handle
             vels = min(integrated_vels);
             leg_time = sum(dist./vels(1:end-1));
             accels = min(integrated_accels);
+            self.vels(self.track.apex(self.pos+1):self.track.apex(self.pos+1)+length(vels)-1) = vels;
+            self.accels(self.track.apex(self.pos+1):self.track.apex(self.pos+1)+length(accels)-1) = accels;
             
             leg_time = sum(dist./vels(1:end-1));
             self.time = self.time+leg_time;
             self.pos = self.pos+1;
             
-            hold off
-            figure
-            plot([0 cumsum(dist)],forward_vels)
-            hold on
-            plot([0 cumsum(dist)],fliplr(reverse_vels))
-            plot([0 cumsum(dist)],vels, '--o')
-            xlabel('Distance (m)')
-            ylabel('Velocity (m/s)')
-            title('Forward Integrated Velocity from the Entry Apex')
+%             hold off
+%             figure
+%             plot([0 cumsum(dist)],forward_vels)
+%             hold on
+%             plot([0 cumsum(dist)],fliplr(reverse_vels))
+%             plot([0 cumsum(dist)],vels, '--o')
+%             xlabel('Distance (m)')
+%             ylabel('Velocity (m/s)')
+%             title('Forward Integrated Velocity from the Entry Apex')
         end
         
         function vel = calc_max_vel(self, r)
@@ -141,7 +141,6 @@ classdef Simulator < handle
             fx = interp1(valid_points(1,:), valid_points(2,:), fy, 'linear');
             
             if isnan(fx)
-                disp('neg accel')
                 fx = 0;
             end
         end
@@ -167,6 +166,21 @@ classdef Simulator < handle
             end
             self.time
         end
+        
+        function self = plot_velocity(self)
+            zz = zeros([2, self.track.num_points]);
+            figure
+            hold on
+            h = surf([self.track.points(1,:); self.track.points(1,:)], [self.track.points(2,:); self.track.points(2,:)],zz,[self.vels; self.vels],'EdgeColor','interp');
+            set(h, 'LineWidth', 2.5)
+            colormap jet
+            colorbar
+            hold off
+            axis equal
+            xlabel('(meters)')
+            ylabel('(meters)')
+        end
+            
         
     end
 end

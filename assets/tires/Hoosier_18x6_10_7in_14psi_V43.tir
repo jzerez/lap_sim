@@ -36,7 +36,7 @@ FILE_FORMAT              ='ASCII'
 $----------------------------------------------------------------units
 [UNITS]
  LENGTH              = 'meter'
- FORCE               = 'Newton'
+ FORCE               = 'newton'
  ANGLE               = 'radians'
  MASS                = 'kg'
  TIME                = 'second'

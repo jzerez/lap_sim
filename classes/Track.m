@@ -51,7 +51,6 @@ classdef Track
                 points(2,:) = (p1(2)+p2(2))/2 + X.*sin(angles) + Y.*cos(angles);
                 self.points = points;
                 self.num_points = numPoints;
-                apex = [1,numPoints/2,numPoints];
 
             else                            % imported track
                 disp('track')
@@ -99,35 +98,39 @@ classdef Track
             curvature = fliplr(rs);        % flip array to match points
             self.curvature = curvature;
 
-            if exist('apex_points','var')   %using manually located apexes
-                disp("Manual")
-                manual_apex = xlsread(apex_points)'.*scale;
-                for i = 1:size(manual_apex,2)
-                    [min_val, min_indx] = min(sum((points-manual_apex(:,i)).^2,1));
-                    apex(i) = min_indx;
-                end
+            % process apexes    
+            if strcmp(track_img, 'ellipse')
+                apex = [1,numPoints/2,numPoints];
+            else
+                if exist('apex_points','var')   %using manually located apexes
+                    disp("Manual")
+                    manual_apex = xlsread(apex_points)'.*scale;
+                    for i = 1:size(manual_apex,2)
+                        [min_val, min_indx] = min(sum((points-manual_apex(:,i)).^2,1));
+                        apex(i) = min_indx;
+                    end
 
-            else                            % computationally find apexes
-               disp("Computational")
-               turns = curvature(1,:)>=0.04;  %labels points as being part of a turn (1) or a straight (0)
-%                apex = []
-               i = 1;
-               j = 1;
-               while i<size(curvature,2)-1
-                   init = i;
-                   while turns(i)-turns(i+1)==0        % find continuous turns/straights
-                       i = i+1;
-                       if i == size(curvature,2)-1
-                           break
+                else                            % computationally find apexes
+                   disp("Computational")
+                   turns = curvature(1,:)>=0.03;  %labels points as being part of a turn (1) or a straight (0)
+                   i = 1;
+                   j = 1;
+                   while i<size(curvature,2)-1
+                       init = i;
+                       while turns(i)-turns(i+1)==0        % find continuous turns/straights
+                           i = i+1;
+                           if i == size(curvature,2)-1
+                               break
+                           end
                        end
+                       if turns(init) == 1     % if not a straight
+                           [curve, index] = max(curvature(:,init:i));     % find global max
+                           apex(j) = init+index-1;             % save global index
+                           j = j+1;
+                       end
+                       i = i+1;
                    end
-                   if turns(init) == 1     % if not a straight
-                       [curve, index] = max(curvature(:,init:i));     % find global max
-                       apex(j) = init+index-1;             % save global index
-                       j = j+1;
-                   end
-                   i = i+1;
-               end
+                end
             end
             self.apex = apex;
         end

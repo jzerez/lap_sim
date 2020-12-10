@@ -31,7 +31,7 @@ classdef Track
             % get track points
             if strcmp(track_img, 'ellipse')       % test elliptical track
                 disp('ellipse')
-                width = 150; % meters
+                width = 250; % meters
                 height = 50; % meters
                 a = width/2;
                 b = height/2;

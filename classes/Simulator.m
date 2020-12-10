@@ -61,7 +61,7 @@ classdef Simulator < handle
             % forward acceleration integration
             for i = 1:size(dist,2)
                 [forward_fx,forward_fy] = self.interp_force(self.car.friction_cone, forward_vels(i), radii(i), 1);    % forces at first apex
-                scatter3(forward_fy, forward_fx, forward_vels(i), 'r*')
+%                 scatter3(forward_fy, forward_fx, forward_vels(i), 'r*')
                 forward_accels(i) = forward_fx/self.car.mass;
                
                 inputs = [forward_accels(i)/2 forward_vels(i) -dist(i)];

@@ -21,7 +21,8 @@ c = Car(a, transmission, aero, tire, tire_r);
 %test track
 track_img ='assets/track/MichiganTrack2019.jpg';
 apex_pts = 'assets/track/apex.xlsx';
-t = Track(track_img);
+% t = Track(track_img);
+t = Track('ellipse');
 t.plot
 % t.get_points(0);
 % t.plot()

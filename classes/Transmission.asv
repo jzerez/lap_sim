@@ -3,17 +3,14 @@ classdef Transmission < handle
         mass;               % kg
         gear_ratio;         % unitless (driver/driven)
         torque_vs_rpm;      % torque vs. rpm function [rpm; torque (Nm)]
-        max_vel;            % maximum vehicle velocity that the tranmission can support (m/s)
-        r;                  % tire radius (m)
+        max_vel;            % maximum velocity that the tranmission can support (
     end
     
     methods
-        function self = Transmission(mass, gear_ratio, torque_vs_rpm, r)
+        function self = Transmission(mass, gear_ratio, torque_vs_rpm)
             self.mass = mass;
             self.gear_ratio = gear_ratio;
             self.torque_vs_rpm = torque_vs_rpm;
-            self.r = r;
-            self.max_vel = max(torque_vs_rpm(1, :)) / 60 * (2* pi) * r / gear_ratio;
         end
         
         function res = motor_curve_228(self)
@@ -32,9 +29,9 @@ classdef Transmission < handle
             curve = [rpms; torques];
         end
         
-        function max_force = calc_max_force(self, vel)
+        function max_force = calc_max_force(self, vel, r)
                 % calculate corresponding motor rpm given gear ratio
-                motor_rpm = vel / self.r / (2 * pi) * 60 * self.gear_ratio;
+                motor_rpm = vel / r / (2 * pi) * 60 * self.gear_ratio;
                 curve = self.torque_vs_rpm;
                 if motor_rpm > max(curve(1, :))
                     motor_rpm = max(curve(1, :));
@@ -44,7 +41,7 @@ classdef Transmission < handle
                 motor_torque_lim = interp1(curve(1, :), curve(2, :), motor_rpm);
                 % Divide by two because max force for each rear wheel is
                 % half of total
-                max_force = motor_torque_lim * self.gear_ratio / self.r / 2; 
+                max_force = motor_torque_lim * self.gear_ratio / r / 2; 
         end
         
     end

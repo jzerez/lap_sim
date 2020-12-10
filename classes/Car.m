@@ -17,8 +17,8 @@ classdef Car < handle
             self.aero = aero;
             self.mass = self.calc_mass();
             self.tire_r = tire_r;
-%             self.friction_cone = self.calc_cone(tire, [1,5:5:35], 20, 25);
-            self.friction_cone = self.calc_simple_cone([1, 5:5:35], 1000, 1300);
+            self.friction_cone = self.calc_cone(tire, [1,5:5:35], 20, 25);
+%             self.friction_cone = self.calc_simple_cone([1, 5:5:35], 1000, 1300);
            
         end
         
@@ -31,8 +31,8 @@ classdef Car < handle
             fys = max_fy * sqrt(1-((fxs.^2)./max_fx^2));
             
             
-            fys = [fys(2:end), fliplr(fys)] * 4;
-            fxs = [fxs(2:end), fliplr(-fxs)] * 4;
+            fys = [fys(2:end), fliplr(fys)];
+            fxs = [fxs(2:end), fliplr(-fxs)];
             
             cone = zeros([3, 49, length(vels)]);
             figure
@@ -120,8 +120,8 @@ classdef Car < handle
             % Needzs to be positive!!
             Fz = -(self.mass * self.g + self.aero.calc_lift(vel)) ./ 4;
             % drag force due to aero (should be negative!) (N)
-            F_drag = self.aero.calc_drag(vel);
-%             F_drag = 0;
+%             F_drag = self.aero.calc_drag(vel);
+            F_drag = 0;
             % Fz = -self.mass * self.g;
             disp(self.aero.calc_lift(vel) / (self.mass * self.g))
             Fzs = ones([1, num_samples]) * Fz;
@@ -190,14 +190,7 @@ classdef Car < handle
             % Calculate the max envelope of all of the curves
             circle = self.fit_friction_circle(curves, num_forces);
             
-             % calculate corresponding motor rpm given gear ratio
-            motor_rpm = vel / self.tire_r / (2 * pi) * 60 * self.transmission.gear_ratio;
-            curve = self.transmission.torque_vs_rpm;
-            % interpolate max motor torque for given rpm
-            motor_torque_lim = interp1(curve(1, :), curve(2, :), motor_rpm);
-            % Divide by two because max force for each rear wheel is
-            % half of total
-            max_fx = motor_torque_lim * self.transmission.gear_ratio / self.tire_r / 2;
+           max_fx = self.transmission.calc_max_force(vel);
             
             fy = circle(1, :);
             fx = circle(2, :);

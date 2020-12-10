@@ -156,21 +156,17 @@ classdef Track
         function [points, radii] = get_points(self, apex_index)
             % returns the x,y coordinates for the track points between the
             %   current apex_index and the next apex index.
-            init = self.apex(apex_index);
+            init = self.apex(apex_index+1);
             
-            
+            points = self.points(:,init:final);
+            radii = 1./self.curvature(init:final);
             
             if apex_index == length(self.apex)
                 final = self.apex(1);
-                delta = (length(self.points) - init) + final + 1;
                 temp_pts = circshift(self.points, init, 2);
                 temp_rad = 1./circshift(self.curvature, init);
-                points = temp_pts(:, 1:delta);
-                radii = temp_rad(:, 1:delta);
-            else
-                final = self.apex(apex_index+1);
-                points = self.points(:,init:final);
-                radii = 1./self.curvature(init:final);
+                points = temp_pts(:, 1:final-init);
+                radii = temp_rad(:, 1:final-init);
             end
         end
 

@@ -3,9 +3,12 @@ close all
 addpath classes
 a = Dummy(150);
 aero = Aero(3, 0.9, -2.5, 0, 1.25);
+load('./assets/motors/emrax228_continuous_power_vs_rpm_curve.mat')
+power_curve = curve;
+
 load('./assets/motors/emrax228_continuous_torque_vs_rpm_curve.mat')
 tire_r = 0.225;
-transmission = Transmission(70, 3.75, curve, tire_r);
+transmission = Transmission(70, 3.75, curve, tire_r, power_curve);
 tire = './assets/tires/Hoosier_18x6_10_7in_14psi_V43.tir';
 
 c = Car(a, transmission, aero, tire, tire_r);

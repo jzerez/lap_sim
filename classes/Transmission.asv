@@ -49,17 +49,6 @@ classdef Transmission < handle
                 max_force = motor_torque_lim * self.gear_ratio / self.r / 2; 
         end
         
-        function power = calc_power(self, vel)
-            motor_rpm = vel / self.r / (2 * pi) * 60 * self.gear_ratio;
-            curve = self.torque_vs_rpm;
-            if motor_rpm > max(curve(1, :))
-                motor_rpm = max(curve(1, :));
-            end
-            
-            % interpolate max motor torque for given rpm
-            power = interp1(curve(1, :), curve(2, :), motor_rpm);
-        end
-        
     end
 
 end

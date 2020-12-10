@@ -9,7 +9,8 @@ classdef Simulator < handle
         last_point_ind = 0;     
         min_rs;         % list of minimum radii for range of velocities
         t_step = 0.01;  % timestep (s)
-        total_dist_traveled = 0
+        total_dist_traveled = 0;
+        energy_used = 0 % Energy used per lap (kJ)
     end
     
     methods
@@ -111,6 +112,13 @@ classdef Simulator < handle
             integrated_accels = [forward_accels; fliplr(reverse_accels)];
 
             vels = min(integrated_vels);
+            energy_used = 0;
+            for i = 1:length(dist)
+                vel = vels(i)
+                time = dist(i) / vel;
+                energy_used = energy_used + time * self.car.transmission.calc_power(vel);
+            end
+            self.energy_used = self.energy_used + energy_used;
             leg_time = sum(dist./vels(1:end-1));
             accels = min(integrated_accels);
 %             self.vels(self.track.apex(self.pos):self.track.apex(self.pos)+length(vels)-1) = vels;
